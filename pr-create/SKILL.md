@@ -65,7 +65,7 @@ Before generating the PR description, build a solid understanding of what change
 
 ### Step 4: Compose the PR Title and Body
 
-**Title:** `<TICKET-KEY> <Jira ticket summary>` — start with the Jira ticket key followed by the issue summary (title) exactly as it appears in Jira (e.g., `IOS-17211 Implement Snapping`).
+**Title:** `<TICKET-KEY> <Jira ticket summary>` — start with the Jira ticket key followed by the Jira issue summary (title) exactly as it appears in Jira (e.g., `IOS-17211 Implement Snapping`). The Jira summary is the authoritative source for the PR title — do not invent or paraphrase it. If the Jira ticket could not be fetched, ask the user for the ticket title before proceeding.
 
 **Body:** Follow the project's PR template format:
 

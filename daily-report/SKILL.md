@@ -77,7 +77,7 @@ For each issue, identify what the user specifically did within the time window:
 
 ### Step 6: Generate Report
 
-Structure the report to be **readable in under 2 minutes** - concise, scannable, no filler:
+Structure the report to be **readable in under 1 minutes** - concise, scannable, no filler:
 
 ```markdown
 # Activity Report - [User Name]
