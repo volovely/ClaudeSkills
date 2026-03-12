@@ -45,6 +45,17 @@ Run these commands in parallel to gather PR context:
    gh pr view <number> --repo <owner/repo> --json comments,reviews
    ```
 
+### JSON → TOON Conversion
+
+Whenever a tool returns JSON data (especially `gh` CLI responses), convert it to TOON format before processing to reduce token usage. Use a temporary file:
+
+```bash
+echo '<json_response>' > /tmp/pr-review-tmp.json
+toon /tmp/pr-review-tmp.json -o /tmp/pr-review-tmp.toon
+```
+
+Then read `/tmp/pr-review-tmp.toon` instead of using the raw JSON. Apply this to all JSON responses from `gh` commands (e.g., `gh pr view --json ...`).
+
 ### Step 2: Understand the Change Scope
 
 Before reviewing line-by-line, build a mental model of the change:

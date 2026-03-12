@@ -2,6 +2,7 @@
 name: pr-create
 description: Use when the user asks to "create a PR", "open a pull request", or says "pr-create". Gathers diff context, fetches Jira ticket details, generates title and description, then opens the browser for the user to review and submit.
 argument-hint: "[base branch]"
+model: sonnet
 ---
 
 # PR Create Skill
@@ -53,6 +54,17 @@ Run these operations **in parallel**:
 4. **Fetch Jira ticket details:** Use `mcp__atlassian__getAccessibleAtlassianResources` to get the cloud ID, then use `mcp__atlassian__getJiraIssue` with:
    - `issueIdOrKey`: the extracted ticket key
    - `fields`: `["summary", "description", "status"]`
+
+### JSON → TOON Conversion
+
+Whenever a tool returns JSON data (especially MCP/Jira responses), convert it to TOON format before processing to reduce token usage. Use a temporary file:
+
+```bash
+echo '<json_response>' > /tmp/pr-create-tmp.json
+toon /tmp/pr-create-tmp.json -o /tmp/pr-create-tmp.toon
+```
+
+Then read `/tmp/pr-create-tmp.toon` instead of using the raw JSON. Apply this to all JSON responses from MCP tools (e.g., `mcp__atlassian__getAccessibleAtlassianResources`, `mcp__atlassian__getJiraIssue`).
 
 ### Step 3: Understand the Changes
 
