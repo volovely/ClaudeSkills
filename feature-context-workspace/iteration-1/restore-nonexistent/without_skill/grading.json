@@ -1,0 +1,9 @@
+{
+  "eval_id": 3,
+  "config": "without_skill",
+  "expectations": [
+    {"text": "Reports that no memo/context exists for 'payments'", "passed": true, "evidence": "States: 'unable to restore context for payments because no saved context with that name exists'"},
+    {"text": "Suggests running memorize first", "passed": false, "evidence": "Does not suggest /context memorize payments. Instead offers to 'help build a new context' and mentions the SFGPayment module — a generic offer, not the specific memorize command."},
+    {"text": "Does NOT go exploring the codebase looking for payments-related code", "passed": false, "evidence": "Searched project root with Glob for *payment* patterns, found SFGPayment module, and offered to explore it. Used 5 tool calls to search."}
+  ]
+}

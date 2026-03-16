@@ -1,0 +1,9 @@
+{
+  "eval_id": 3,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Reports that no memo/context exists for 'payments'", "passed": true, "evidence": "Clearly states: 'No saved context found for payments. There is no memo file at ~/.claude/skills/feature-context/memos/payments.md'"},
+    {"text": "Suggests running memorize first", "passed": true, "evidence": "Suggests exact command: '/context memorize payments'"},
+    {"text": "Does NOT go exploring the codebase looking for payments-related code", "passed": true, "evidence": "Only checked the memos directory to list existing memos. Did not search project source for payment-related code."}
+  ]
+}

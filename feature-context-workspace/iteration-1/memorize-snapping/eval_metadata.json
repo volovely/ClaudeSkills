@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "memorize-snapping",
+  "prompt": "I've been working on the snapping feature in SFGSurface. /context memorize snapping",
+  "assertions": [
+    {"text": "Memo includes relative file paths from project root to the snapping feature files", "type": "content"},
+    {"text": "Memo describes the architecture/data flow (e.g., gesture -> calculator -> strategy -> result pipeline)", "type": "content"},
+    {"text": "Memo lists and describes key source files with their roles", "type": "content"},
+    {"text": "Memo captures non-obvious implementation details (e.g., center snap multiplier=2, fixed edge handling)", "type": "content"},
+    {"text": "Memo includes a last-updated date", "type": "content"},
+    {"text": "Memo mentions related files outside Snapping/ directory (Movable.swift, Resizable.swift, Scalable.swift)", "type": "content"}
+  ]
+}

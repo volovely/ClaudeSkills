@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "config": "without_skill",
+  "expectations": [
+    {"text": "Memo includes relative file paths from project root to the snapping feature files", "passed": true, "evidence": "File inventory table uses paths relative to SFGSurface/, lists all core and related files"},
+    {"text": "Memo describes the architecture/data flow", "passed": true, "evidence": "ASCII pipeline diagram showing Modifier -> SnappingCalculator -> CorrectionMode -> SnappingResult -> visual/haptic outputs"},
+    {"text": "Memo lists and describes key source files with their roles", "passed": true, "evidence": "Comprehensive file inventory in table format with 14 files organized by category"},
+    {"text": "Memo captures non-obvious implementation details", "passed": true, "evidence": "Covers center multiplier=2, fixed edge handling, spacing algorithm, row pruning, bleed zones, rotation compensation"},
+    {"text": "Memo includes a last-updated date", "passed": false, "evidence": "No date stamp found anywhere in the document"},
+    {"text": "Memo mentions related files outside Snapping/ directory", "passed": true, "evidence": "Gesture Modifiers section covers Movable, Resizable, Scalable. Extensions section covers Utills+Extensions.swift. Tests section covers SnappingCalculatorTests.swift"}
+  ]
+}

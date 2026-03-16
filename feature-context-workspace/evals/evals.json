@@ -1,0 +1,41 @@
+{
+  "skill_name": "feature-context",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I've been working on the snapping feature in SFGSurface. /context memorize snapping",
+      "expected_output": "A comprehensive .md memo file covering the snapping feature's architecture, key files, implementation details, and integration points",
+      "files": [],
+      "assertions": [
+        {"text": "Memo includes relative file paths from project root to the snapping feature files", "type": "content"},
+        {"text": "Memo describes the architecture/data flow (e.g., gesture -> calculator -> strategy -> result pipeline)", "type": "content"},
+        {"text": "Memo lists and describes key source files with their roles", "type": "content"},
+        {"text": "Memo captures non-obvious implementation details (e.g., center snap multiplier=2, fixed edge handling)", "type": "content"},
+        {"text": "Memo includes a last-updated date", "type": "content"},
+        {"text": "Memo mentions related files outside Snapping/ directory (Movable.swift, Resizable.swift, Scalable.swift)", "type": "content"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to continue working on snapping. /context restore snapping",
+      "expected_output": "Reads the existing memo, presents a brief summary, and is ready to work on the feature without re-exploring the codebase",
+      "files": [],
+      "assertions": [
+        {"text": "Did NOT re-read source files — only read the memo file", "type": "behavior"},
+        {"text": "Presents a brief summary of the loaded feature context", "type": "content"},
+        {"text": "Mentions the feature location (directory path)", "type": "content"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "/context restore payments",
+      "expected_output": "Tells the user no memo exists for 'payments' and suggests running /context memorize payments first",
+      "files": [],
+      "assertions": [
+        {"text": "Reports that no memo/context exists for 'payments'", "type": "behavior"},
+        {"text": "Suggests running memorize first (e.g., /context memorize payments)", "type": "behavior"},
+        {"text": "Does NOT go exploring the codebase looking for payments-related code", "type": "behavior"}
+      ]
+    }
+  ]
+}

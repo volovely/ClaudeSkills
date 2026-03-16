@@ -5,7 +5,7 @@ description: >
   based on the actual code diff and changed files. Use this skill when the user says "qa handoff", "fill qa handoff",
   "update qa handoff", "qa-handoff", or asks to prepare a ticket for QA. Also use when the user mentions
   transitioning a Jira ticket to QA, writing test guidance, or preparing handoff notes for testers.
-argument-hint: "[TICKET-KEY] [base-branch]"
+argument-hint: "[TICKET-KEY] [PR-URL-or-number]"
 ---
 
 # QA Handoff Skill
@@ -17,19 +17,24 @@ Analyze the current branch's code changes and fill the QA handoff field (`custom
 ```
 /qa-handoff
 /qa-handoff IOS-17215
-/qa-handoff IOS-17215 develop
+/qa-handoff IOS-17215 https://github.com/.../pull/123
+/qa-handoff IOS-17215 123
 ```
 
 - First argument (optional): Jira ticket key. If omitted, extract from the current branch name (e.g., `IOS-17215-Width-and-height-alignment` → `IOS-17215`).
-- Second argument (optional): Base branch for the diff. Defaults to `develop`.
+- Second argument (optional): PR URL or PR number. If omitted, the skill will look up the open PR for the current branch automatically.
 
 ## Instructions
 
 ### Step 1: Determine Context
 
 1. **Current branch:** Run `git rev-parse --abbrev-ref HEAD`.
-2. **Jira ticket key:** Use the argument if provided, otherwise parse from the branch name. The ticket key is the first segment matching `UPPERCASE-DIGITS` (e.g., `IOS-17215`).
-3. **Base branch:** Use the second argument if provided, otherwise default to `develop`.
+2. **Jira ticket key:** Use the first argument if provided, otherwise parse from the branch name. The ticket key is the first segment matching `UPPERCASE-DIGITS` (e.g., `IOS-17215`).
+3. **PR and base branch:**
+   - If the user provided a PR URL or number as the second argument, run `gh pr view <number-or-url> --json number,baseRefName,url` to get PR details.
+   - Otherwise, run `gh pr view --json number,baseRefName,url` to find the open PR for the current branch automatically.
+   - Extract `baseRefName` as the base branch for the diff.
+   - If no PR is found (command fails or returns nothing), fall back to `develop` as the base branch and note that no PR was found.
 
 If the current branch equals the base branch, stop and inform the user.
 
@@ -41,6 +46,7 @@ Run these in **parallel**:
    ```
    git diff <base-branch>...HEAD --stat
    ```
+   (Use the base branch determined in Step 1.)
 
 2. **Full diff:**
    ```
@@ -55,9 +61,34 @@ Run these in **parallel**:
 4. **Fetch Jira ticket** using `mcp__atlassian__getJiraIssue`:
    - `cloudId`: `snapfish-llc.atlassian.net`
    - `issueIdOrKey`: the extracted ticket key
-   - `fields`: `["summary", "description", "status", "issuetype", "customfield_17288"]`
+   - `responseContentFormat`: `"markdown"`
+   - `fields`: `["summary", "description", "status", "issuetype", "priority", "labels", "parent", "customfield_10009", "customfield_12202", "customfield_17288"]`
 
-   This fetches the ticket summary (for context on what the feature/fix is about), the current status, issue type (Story, Bug, Task), and the existing QA handoff field content.
+   Field reference:
+   - `priority` — P1/P2/P3/TBD: directly informs risk level assessment
+   - `labels` — e.g. `RevenueTargets` warrants elevated risk
+   - `parent` — parent epic key and summary
+   - `customfield_10009` — epic link key (alternative to `parent`)
+   - `customfield_12202` — testing type: `"Manual"` or `"Automated"` — use in the Unit Tests section
+   - `customfield_17288` — existing QA handoff content (check before overwriting)
+
+5. **Fetch parent/epic if present:** If the ticket has a `parent.key` or a non-null `customfield_10009`, fetch the parent with:
+   - `issueIdOrKey`: the parent key
+   - `responseContentFormat`: `"markdown"`
+   - `fields`: `["summary", "description", "issuetype", "priority", "labels"]`
+
+   Use the parent epic's description for additional "why" context when composing the handoff.
+
+### JSON → TOON Conversion
+
+**MANDATORY:** Whenever a tool returns JSON data (especially MCP/Jira responses), convert it to TOON format before processing to reduce token usage. Use a temporary file:
+
+```bash
+echo '<json_response>' > /tmp/qa-handoff-tmp.json
+toon /tmp/qa-handoff-tmp.json -o /tmp/qa-handoff-tmp.toon
+```
+
+Then read `/tmp/qa-handoff-tmp.toon` instead of using the raw JSON. Apply this to all JSON responses from MCP tools (e.g., `mcp__atlassian__getJiraIssue`, `mcp__atlassian__editJiraIssue`).
 
 ### Step 3: Analyze the Changes
 
@@ -71,7 +102,10 @@ Before writing the handoff, build a thorough understanding:
    - What user-facing behavior changed?
    - What existing behavior could regress?
    - Are there edge cases worth calling out?
-5. **Assess risk level:**
+5. **Assess risk level** — use all available signals:
+   - Ticket `priority` (`P1 Critical` / `P2 High` → raise risk floor)
+   - Labels (e.g. `RevenueTargets` → at least Medium)
+   - Scope of the diff (how many files, what layers)
    - **Low:** Cosmetic changes, copy updates, isolated additions with no effect on existing flows.
    - **Medium:** New behavior added, moderate refactoring touching existing logic, changes across multiple interaction points.
    - **High:** Core logic rewritten, changes to data models or persistence, security-sensitive areas, broad cross-cutting changes.
@@ -82,11 +116,11 @@ Build the content for `customfield_17288` in Atlassian Document Format (ADF). Th
 
 **Risk Level:** `Low` / `Medium` / `High` — followed by a brief justification referencing what changed and why it carries that risk level.
 
-**Change Description:** A concise summary (2-3 sentences) of what changed and why. Reference the Jira ticket description for the "why". Mention key files or areas affected.
+**Change Description:** A concise summary (2-3 sentences) of what changed and why. Reference the Jira ticket description and parent epic description for the "why". Mention key files or areas affected.
 
 **Root Cause Analysis:** For bug fixes, explain what caused the bug and how the fix addresses it. For new features or refactoring, write `N/A — new feature` or `N/A — refactoring`.
 
-**Unit Tests:** State whether new unit tests were added. If not, note that manual testing is required. If tests exist, mention what they cover.
+**Unit Tests:** State whether new unit tests were added. Cross-reference `customfield_12202` (testing type): if `"Manual"`, explicitly note that no automated tests cover this and full manual regression is required. If tests exist, mention what they cover.
 
 **Guidance to QA:** This is the most important section. Write a **numbered list** of specific test scenarios. Each item should have:
 - A **bold label** summarizing the scenario (e.g., "Width/Height snapping (new):")

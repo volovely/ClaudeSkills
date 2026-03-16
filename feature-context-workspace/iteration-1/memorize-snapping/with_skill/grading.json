@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Memo includes relative file paths from project root to the snapping feature files", "passed": true, "evidence": "Lists SFG/SFG/Sources/SFGSurface/Snapping/ and 6 related files with full relative paths"},
+    {"text": "Memo describes the architecture/data flow", "passed": true, "evidence": "Detailed pipeline diagram: Gesture -> SnappingCalculator -> CorrectionMode (4 closures) -> SnappingResult, with coordinate space discussion"},
+    {"text": "Memo lists and describes key source files with their roles", "passed": true, "evidence": "Key Files section covers all 10 files with method-level detail for CorrectionMode.swift"},
+    {"text": "Memo captures non-obvious implementation details", "passed": true, "evidence": "8 subsections covering center multiplier=2, fixed edge handling, aspect-ratio mode, spacing algorithm, bleed zones, rotation, coordinate reconciliation, border width"},
+    {"text": "Memo includes a last-updated date", "passed": true, "evidence": "Footer: *Last updated: 2026-03-16*"},
+    {"text": "Memo mentions related files outside Snapping/ directory", "passed": true, "evidence": "Location section lists Movable.swift, Resizable.swift, Scalable.swift, Utills+Extensions.swift, ObjectEditing.swift, GuardrailsOverlayModifier.swift"}
+  ]
+}

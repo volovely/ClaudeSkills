@@ -1,0 +1,9 @@
+{
+  "eval_id": 2,
+  "config": "without_skill",
+  "expectations": [
+    {"text": "Did NOT re-read source files — only read the memo file", "passed": false, "evidence": "Read 19-20 files: all 10 source files, 4 consumer files, test file, docs, and skill definition. Explicitly acknowledges: 'Without the skill directing me to that memo, I had to discover it through exploration, and even after finding it, I still read all source files to verify.'"},
+    {"text": "Presents a brief summary of the loaded feature context", "passed": true, "evidence": "Comprehensive summary with architecture, core types, key implementation details, and file listing"},
+    {"text": "Mentions the feature location (directory path)", "passed": true, "evidence": "States 'SFG/SFG/Sources/SFGSurface/Snapping/' and lists all files under it"}
+  ]
+}

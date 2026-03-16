@@ -2,7 +2,7 @@
 name: pr-create
 description: Use when the user asks to "create a PR", "open a pull request", or says "pr-create". Gathers diff context, fetches Jira ticket details, generates title and description, then opens the browser for the user to review and submit.
 argument-hint: "[base branch]"
-model: sonnet
+model: claude-opus-4-6
 ---
 
 # PR Create Skill
@@ -33,16 +33,24 @@ If the current branch is the same as the base branch (e.g., both are `develop`),
 
 ### Step 2: Gather Diff and Jira Context
 
-Run these operations **in parallel**:
+**First, ensure both branches are up to date with remote.** Run this before any diff or log commands:
+
+```
+git fetch origin <base-branch> && git fetch origin <current-branch> 2>/dev/null || true
+```
+
+This ensures the diff reflects the true state on GitHub, not stale local branch tips. Use `origin/<base-branch>` (not the local branch) as the base for all diff and log commands.
+
+Then run these operations **in parallel**:
 
 1. **Diff between current branch and base branch:**
    ```
-   git diff <base-branch>...HEAD
+   git diff origin/<base-branch>...HEAD
    ```
 
 2. **Commit log since divergence from base branch:**
    ```
-   git log <base-branch>..HEAD --oneline
+   git log origin/<base-branch>..HEAD --oneline
    ```
 
 3. **Check if branch is pushed to remote:**
@@ -53,7 +61,21 @@ Run these operations **in parallel**:
 
 4. **Fetch Jira ticket details:** Use `mcp__atlassian__getAccessibleAtlassianResources` to get the cloud ID, then use `mcp__atlassian__getJiraIssue` with:
    - `issueIdOrKey`: the extracted ticket key
-   - `fields`: `["summary", "description", "status"]`
+   - `responseContentFormat`: `"markdown"`
+   - `fields`: `["summary", "description", "issuetype", "status", "priority", "assignee", "labels", "components", "parent", "customfield_10009", "customfield_10005", "customfield_10102", "customfield_12202", "customfield_17288", "customfield_17049"]`
+
+   Field reference:
+   - `customfield_10009` — Epic link key
+   - `customfield_10005` — Story points
+   - `customfield_10102` — Platform/Team (e.g., "Shutterfly Platform")
+   - `customfield_12202` — Testing type (Manual/Automated)
+   - `customfield_17288` — QA Handoff notes (Risk Level, Change Description, Guidance to QA)
+   - `customfield_17049` — Sprint points
+
+5. **Fetch parent/epic if present:** If the ticket has a `parent.key` or `customfield_10009` value, fetch the parent with:
+   - `issueIdOrKey`: the parent key
+   - `responseContentFormat`: `"markdown"`
+   - `fields`: `["summary", "description", "issuetype", "status", "priority", "labels"]`
 
 ### JSON → TOON Conversion
 
@@ -73,7 +95,7 @@ Before generating the PR description, build a solid understanding of what change
 1. **Categorize changed files** from the diff (models, views, features, tests, configs, assets).
 2. **Read key changed files** in full using the Read tool — not just the diff hunks. Focus on files with significant logic changes, new types, or API modifications.
 3. **Follow references** if needed — use Grep or Glob to understand how new or modified types/functions are used elsewhere in the codebase.
-4. **Summarize the change** in your own words: what was added, modified, or fixed, and why (using the Jira ticket description as context for the "why").
+4. **Summarize the change** in your own words: what was added, modified, or fixed, and why (using the Jira ticket description and parent epic description as context for the "why").
 
 ### Step 4: Compose the PR Title and Body
 
@@ -86,13 +108,14 @@ Before generating the PR description, build a solid understanding of what change
 
 <A clear, concise description of the changes based on your analysis from Step 3.
 Include:
-- What was changed and why
+- What was changed and why (use Jira description + parent epic description for the "why")
 - Key implementation decisions
 - Notable new types, patterns, or dependencies introduced>
 
 ## JIRA
 
 https://snapfish-llc.atlassian.net/browse/<TICKET-KEY>
+<If parent epic exists: 🏛 Epic: https://snapfish-llc.atlassian.net/browse/<PARENT-KEY> — <parent summary>>
 ```
 
 Keep the summary factual and focused. Use bullet points for multiple distinct changes. Do not pad with obvious or redundant information.

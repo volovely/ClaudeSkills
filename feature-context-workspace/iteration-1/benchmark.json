@@ -1,0 +1,90 @@
+{
+  "skill_name": "feature-context",
+  "iteration": 1,
+  "configs": [
+    {
+      "name": "with_skill",
+      "evals": [
+        {
+          "eval_name": "memorize-snapping",
+          "pass_rate": 1.0,
+          "passed": 6,
+          "total": 6,
+          "tokens": 84317,
+          "duration_seconds": 310.3
+        },
+        {
+          "eval_name": "restore-snapping",
+          "pass_rate": 1.0,
+          "passed": 3,
+          "total": 3,
+          "tokens": 15158,
+          "duration_seconds": 32.0
+        },
+        {
+          "eval_name": "restore-nonexistent",
+          "pass_rate": 1.0,
+          "passed": 3,
+          "total": 3,
+          "tokens": 13891,
+          "duration_seconds": 39.6
+        }
+      ],
+      "aggregate": {
+        "mean_pass_rate": 1.0,
+        "mean_tokens": 37789,
+        "mean_duration_seconds": 127.3,
+        "total_tokens": 113366,
+        "total_duration_seconds": 381.9
+      }
+    },
+    {
+      "name": "without_skill",
+      "evals": [
+        {
+          "eval_name": "memorize-snapping",
+          "pass_rate": 0.833,
+          "passed": 5,
+          "total": 6,
+          "tokens": 83388,
+          "duration_seconds": 203.1
+        },
+        {
+          "eval_name": "restore-snapping",
+          "pass_rate": 0.667,
+          "passed": 2,
+          "total": 3,
+          "tokens": 88917,
+          "duration_seconds": 144.6
+        },
+        {
+          "eval_name": "restore-nonexistent",
+          "pass_rate": 0.333,
+          "passed": 1,
+          "total": 3,
+          "tokens": 14639,
+          "duration_seconds": 41.7
+        }
+      ],
+      "aggregate": {
+        "mean_pass_rate": 0.611,
+        "mean_tokens": 62315,
+        "mean_duration_seconds": 129.8,
+        "total_tokens": 186944,
+        "total_duration_seconds": 389.4
+      }
+    }
+  ],
+  "delta": {
+    "pass_rate": "+0.389 (1.000 vs 0.611)",
+    "tokens": "-73578 (113366 vs 186944 total)",
+    "token_savings_percent": "39.4%"
+  },
+  "analyst_observations": [
+    "The restore-snapping test shows the skill's primary value: 15K tokens vs 89K tokens (6x reduction), 32s vs 145s (4.5x faster). The skill prevents Claude from re-reading source files.",
+    "The memorize-snapping test shows similar token usage (84K vs 83K) but the with-skill version took longer (310s vs 203s). The skill adds structural overhead during memorize but produces a more consistent output format with a date stamp.",
+    "The restore-nonexistent test reveals a key behavioral difference: with the skill, Claude cleanly reports 'not found' and suggests the memorize command (3/3 pass). Without it, Claude goes exploring the codebase looking for payment-related files (1/3 pass).",
+    "The 'last-updated date' assertion is non-discriminating for restore tests but discriminates on memorize: the skill template includes it, baseline doesn't.",
+    "Overall token savings are 39% across all tests, but the real value shows in restore mode where it's 83% fewer tokens."
+  ]
+}

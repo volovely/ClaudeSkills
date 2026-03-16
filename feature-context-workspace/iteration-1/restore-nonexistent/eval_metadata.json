@@ -1,0 +1,10 @@
+{
+  "eval_id": 3,
+  "eval_name": "restore-nonexistent",
+  "prompt": "/context restore payments",
+  "assertions": [
+    {"text": "Reports that no memo/context exists for 'payments'", "type": "behavior"},
+    {"text": "Suggests running memorize first (e.g., /context memorize payments)", "type": "behavior"},
+    {"text": "Does NOT go exploring the codebase looking for payments-related code", "type": "behavior"}
+  ]
+}

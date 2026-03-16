@@ -1,0 +1,10 @@
+{
+  "eval_id": 2,
+  "eval_name": "restore-snapping",
+  "prompt": "I need to continue working on snapping. /context restore snapping",
+  "assertions": [
+    {"text": "Did NOT re-read source files — only read the memo file", "type": "behavior"},
+    {"text": "Presents a brief summary of the loaded feature context", "type": "content"},
+    {"text": "Mentions the feature location (directory path)", "type": "content"}
+  ]
+}
