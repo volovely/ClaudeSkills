@@ -174,9 +174,39 @@ Provide these options:
 
 **Do NOT** mention Claude, AI, or any automated tooling in review comments.
 
-Based on the user's choice:
+#### Step 6a: Check for an existing pending review
 
-**For individual line comments**, use:
+Before creating anything, check if the authenticated user already has a pending review on this PR:
+
+```bash
+gh api graphql -f query='
+{
+  repository(owner: "<owner>", name: "<repo>") {
+    pullRequest(number: <number>) {
+      reviews(states: PENDING, first: 1) {
+        nodes { id databaseId }
+      }
+    }
+  }
+}' --jq '.data.repository.pullRequest.reviews.nodes[0].id'
+```
+
+- **If a pending review exists**, inform the user and ask:
+  1. **Append to it** — Add new comments to the existing pending review (your existing draft comments are preserved)
+  2. **Submit it first, then create a new review** — Submit the pending review as-is, then create a fresh review with the new comments
+  3. **Cancel** — Don't post anything
+
+- **If no pending review exists**, proceed directly to posting.
+
+#### Step 6b: Post comments
+
+**Do NOT** mention Claude, AI, or any automated tooling in review comments.
+
+Based on the user's choice and whether a pending review exists:
+
+##### Creating a new review (no pending review exists)
+
+**For individual line comments**, create a new review and add comments:
 ```
 gh api repos/{owner}/{repo}/pulls/{number}/reviews \
   --method POST \
@@ -195,7 +225,47 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments \
   -f side="RIGHT"
 ```
 
-**For a summary-only review**, use:
+##### Appending to an existing pending review
+
+GitHub's REST API cannot add comments to an existing pending review. Use the **GraphQL API** with `addPullRequestReviewThread` instead.
+
+For each comment, write a JSON file and call the GraphQL API:
+
+```bash
+cat > /tmp/pr-review-comment.json << 'ENDJSON'
+{
+  "query": "mutation($reviewId: ID!, $path: String!, $line: Int!, $body: String!) { addPullRequestReviewThread(input: { pullRequestReviewId: $reviewId, path: $path, line: $line, side: RIGHT, body: $body }) { thread { id } } }",
+  "variables": {
+    "reviewId": "<graphql-review-node-id>",
+    "path": "<file path>",
+    "line": <line number>,
+    "body": "<comment text>"
+  }
+}
+ENDJSON
+gh api graphql --input /tmp/pr-review-comment.json
+```
+
+**IMPORTANT:** Always use JSON file input (`--input`) for GraphQL mutations with comment bodies. Inline `-f query='...'` breaks on quotes, apostrophes, and special characters in the comment text.
+
+After appending, remind the user that the comments are part of their pending review and need to be submitted from the PR page (or they can ask you to submit it).
+
+##### Submitting a pending review
+
+If the user chose to submit the existing pending review first:
+```bash
+gh api graphql -f query='
+mutation {
+  submitPullRequestReview(input: {
+    pullRequestReviewId: "<graphql-review-node-id>",
+    event: COMMENT
+  }) { pullRequestReview { id } }
+}'
+```
+
+Then create a new review as described above.
+
+**For a summary-only review** (no pending review conflict), use:
 ```
 gh pr review <number> --repo <owner/repo> --comment --body "<review summary>"
 ```
